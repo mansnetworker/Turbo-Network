@@ -22,6 +22,8 @@ if [ "$choice" == "1" ]; then
     grep -q "net.core.somaxconn" /etc/sysctl.conf || echo "net.core.somaxconn = 65535" >> /etc/sysctl.conf
     grep -q "net.netfilter.nf_conntrack_max" /etc/sysctl.conf || echo "net.netfilter.nf_conntrack_max = 1048576" >> /etc/sysctl.conf
     grep -q "fs.file-max" /etc/sysctl.conf || echo "fs.file-max = 1048576" >> /etc/sysctl.conf
+    grep -q "net.core.default_qdisc=fq" /etc/sysctl.conf || echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+    grep -q "net.ipv4.tcp_congestion_control=bbr" /etc/sysctl.conf || echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
 
     sysctl -p || { echo "❌ Failed to apply sysctl settings!"; exit 1; }
 
@@ -31,7 +33,10 @@ if [ "$choice" == "1" ]; then
     ulimit -n 1048576
     ulimit -Hn 1048576
 
-    echo "✅ Turbo Network settings installed successfully!"
+    modprobe tcp_bbr
+    echo "tcp_bbr" >> /etc/modules-load.d/bbr.conf
+
+    echo "✅ Turbo Network settings and BBR installed successfully!"
 
 elif [ "$choice" == "2" ]; then
     echo "🚀 Removing Turbo Network settings..."
@@ -43,13 +48,18 @@ elif [ "$choice" == "2" ]; then
     sed -i '/net.core.somaxconn/d' /etc/sysctl.conf
     sed -i '/net.netfilter.nf_conntrack_max/d' /etc/sysctl.conf
     sed -i '/fs.file-max/d' /etc/sysctl.conf
+    sed -i '/net.core.default_qdisc=fq/d' /etc/sysctl.conf
+    sed -i '/net.ipv4.tcp_congestion_control=bbr/d' /etc/sysctl.conf
 
     sysctl -p || { echo "❌ Failed to revert sysctl settings!"; exit 1; }
 
     sed -i '/\* soft nofile 200000/d' /etc/security/limits.conf
     sed -i '/\* hard nofile 200000/d' /etc/security/limits.conf
 
-    echo "✅ Turbo Network settings removed successfully!"
+    rm -f /etc/modules-load.d/bbr.conf
+    modprobe -r tcp_bbr
+
+    echo "✅ Turbo Network settings and BBR removed successfully!"
 
 else
     echo "❌ Invalid option selected!"
