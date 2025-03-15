@@ -37,6 +37,7 @@ if [ "$choice" == "1" ]; then
     echo "tcp_bbr" >> /etc/modules-load.d/bbr.conf
 
     echo "✅ Turbo Network settings and BBR installed successfully!"
+    echo "Successful!"
 
 elif [ "$choice" == "2" ]; then
     echo "🚀 Removing Turbo Network settings..."
@@ -60,6 +61,7 @@ elif [ "$choice" == "2" ]; then
     modprobe -r tcp_bbr
 
     echo "✅ Turbo Network settings and BBR removed successfully!"
+    echo "Successful!"
 
 else
     echo "❌ Invalid option selected!"
